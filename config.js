@@ -1,9 +1,9 @@
 const config = {
   db: {
     /* don't expose password or any sensitive info, done only for demo */
-    host: "database-1.cgfusp3cz2br.us-west-1.rds.amazonaws.com",
+    host: "database-1.rds.amazonaws.com",
     user: "admin",
-    password: "Shailaja_6610",
+    password: "xxxxx",
     database: "cmpe281",
 	  port: 3306,
   },
