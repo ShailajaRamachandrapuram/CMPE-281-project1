@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns:layout="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.771.0.min.js"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+    <title>CMPE 281: Online File Storage System</title>
+</head>
+<body>
+    <section class="section">
+        <div class="container has-text-centered">
+            <div>
+                <h1 class="title">CMPE 281: Online File Storage System</h1>
+
+                <div>
+                    <div class="box">
+                        <p style="color:purple; font-size:25px">Hello, <span id="username"></span> </p>
+                        <section class="my-5">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-md-8 mx-auto">
+                                        <h3>Upload File</h3>
+                                        <form method="post" action="/users/user/file/upload" enctype="multipart/form-data">
+                                            <div class="form-group">
+                                                <input type="file" name="file" class="form-control-file"><br>
+                                                <input type="text" name="description" class="form-control" placeholder="Enter description" size="18"/>
+						<input type="hidden" id="email" name="email" value=""/>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Upload</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <div layout:fragment="content">
+                            <table id="thefiletable" class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <td style="text-align:center">File Name</td>
+                                        <td style="text-align:center">Description</td>
+                                        <td style="text-align:center">File Upload time</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </thead>
+                                <tbody id="thefiletablebody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="logout-button">
+               <form method="GET" action="/logout">
+                <input type="hidden" name="logout" value="logout" />
+                <button id="logout-button" type="submit" class="btn btn-danger">Logout</button>
+            </form>
+        </div>
+    </div>
+</div>
+</section>
+<script type="text/javascript">
+    $.ajax({
+        type: 'GET',
+        url: '/users/user',
+        jsonpCallback: 'jsonCallback',
+        dataType: 'json',
+        data : {"email": getCookie("email")},
+        jsonp: false,
+        cache: true,
+        success: function (response) {
+	  $('input[name="email"]').val(response.email);
+          $("#username").html(response.name);
+      },
+      error: function (e) {
+        console.log(e);
+    }
+});
+
+    $.ajax({
+        type: 'GET',
+        url: '/users/user/files',
+        jsonpCallback: 'jsonCallback',
+        dataType: 'json',
+        data : {"email": getCookie("email")},
+        jsonp: false,
+        cache: true,
+        success: function (response) {
+            var res = response;
+            //Important code starts here to populate table
+
+            $('#thefiletable tbody').not(':first').not(':last').remove();
+            var html = '';
+            for(var i = 0; i < res.data.length; i++){
+                html += '<tr><td>' + res.data[i].filename + '</td>';
+                html += '<td>' + res.data[i].description + '</td>';
+                html += '<td>' + res.data[i].createdTime + '</td>';
+                html += '<td> <form method="POST" action="/users/user/file/delete?id='+res.data[i].id +'"> <button type="submit" name="submit" value="value" class="link-button"><i class="fa fa-trash-o" style="font-size:24px;color:red"></i></button></form></td>';
+                html += '<td><a href=" '+ res.data[i].location + '"> <i class="fa fa-download" style="font-size:24px"></i></a> <br/></td>';
+                html += '<td> <form method="POST" action="/users/user/file/edit?id='+ res.data[i].id +'" enctype="multipart/form-data">  <div class="form-group"><input type="file" name="file" class="form-control-file"><br> <button type="submit" class="btn btn-primary" style="font-size:10px"><i class="fa fa-edit" style="font-size:20px"></i></button></div></form></td>';
+                html += '</tr>';
+            }
+            $('#thefiletable tbody').first().after(html);
+        },
+        error: function (e) {
+            console.log(e);
+        }
+    });
+
+    function getCookie(cname) {
+        let name = cname + "=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(';');
+        for(let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') {
+              c = c.substring(1);
+          }
+          if (c.indexOf(name) == 0) {
+              return c.substring(name.length, c.length);
+          }
+      }
+      return "";
+  }
+
+</script>
+</body>
+</html>
+
